@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'pages/select_person_to_chat_page.dart';
 import 'provider.dart';
 
 class Home extends ConsumerStatefulWidget {
@@ -99,8 +100,8 @@ class _HomeState extends ConsumerState<Home>
         onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (_) => const Scaffold()) //SelectPersonToChat()),
-            ),
+              builder: (_) => const SelectPersonToChat(),
+            )),
       ),
     );
   }
