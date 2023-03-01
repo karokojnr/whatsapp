@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp/models/user_data.dart';
 import 'package:whatsapp/provider.dart';
 import '../models/chat.dart';
+import 'chat_page.dart';
 
 class SelectPersonToChat extends ConsumerWidget {
   const SelectPersonToChat({Key? key}) : super(key: key);
@@ -44,7 +45,46 @@ class SelectPersonToChat extends ConsumerWidget {
                   ListTile(
                     title: Text(user.name),
                     onTap: () async {
-                      // TODO: implement
+                      final chatId = await ref
+                              .read(databaseProvider)
+                              ?.getChatStarted(myUser.uid, user.uid) ??
+                          false;
+                      if (chatId == "") {
+                        await ref
+                            .read(databaseProvider)
+                            ?.startChat(myUser.uid, user.uid, user.name)
+                            .then((value) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatPage(
+                                  chat: Chat(
+                                myUid: myUser.uid,
+                                myName: "",
+                                otherUid: user.uid,
+                                otherName: user.name,
+                                chatId: value,
+                              )),
+                            ),
+                          );
+                        });
+                      } else {
+                        if (context.mounted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatPage(
+                                  chat: Chat(
+                                myUid: myUser.uid,
+                                myName: "",
+                                otherUid: user.uid,
+                                otherName: user.name,
+                                chatId: chatId.toString(),
+                              )),
+                            ),
+                          );
+                        }
+                      }
                     },
                   ),
                   const Divider(),

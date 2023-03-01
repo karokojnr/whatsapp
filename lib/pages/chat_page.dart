@@ -4,10 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat.dart';
 import '../models/message.dart';
 import '../provider.dart';
+import '../widgets/chat_bubble.dart';
+import '../widgets/send_message_field.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final Chat chat;
-  const ChatPage({required this.chat, Key? key}) : super(key: key);
+  const ChatPage({
+    required this.chat,
+    Key? key,
+  }) : super(key: key);
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _ChatPageState();
@@ -15,8 +20,6 @@ class ChatPage extends ConsumerStatefulWidget {
 
 class _ChatPageState extends ConsumerState<ChatPage>
     with SingleTickerProviderStateMixin {
-  final _textMessageController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     final myUid = ref.read(firebaseAuthProvider).currentUser!.uid;
@@ -57,114 +60,46 @@ class _ChatPageState extends ConsumerState<ChatPage>
               children: [
                 Column(
                   children: [
-                    // TODO: message list widget
-                    sendMessageField(),
+                    Expanded(
+                        child: StreamBuilder<List<Message>>(
+                      stream: ref
+                          .read(databaseProvider)!
+                          .getMessages(widget.chat.chatId),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                                ConnectionState.active &&
+                            snapshot.hasData) {
+                          final messages = snapshot.data ?? [];
+
+                          return ListView.builder(
+                            reverse: true,
+                            itemCount: messages.length,
+                            itemBuilder: (_, index) {
+                              final message = messages[index];
+                              final isMe = message.myUid ==
+                                  ref
+                                      .read(firebaseAuthProvider)
+                                      .currentUser!
+                                      .uid;
+                              return ChatBubble(
+                                message: message,
+                                isMe: isMe,
+                              );
+                            },
+                          );
+                        }
+                        return Container();
+                      },
+                    )),
+                    SendMessageField(
+                      chat: widget.chat,
+                    ),
                   ],
                 ),
               ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget sendMessageField() {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 30, left: 4, right: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.all(Radius.circular(80)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withOpacity(.2),
-                        offset: const Offset(0.0, 0.50),
-                        spreadRadius: 1,
-                        blurRadius: 1),
-                  ]),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Icon(
-                    Icons.insert_emoticon,
-                    color: Colors.grey[500],
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Expanded(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxHeight: 60,
-                      ),
-                      child: Scrollbar(
-                        child: TextField(
-                          maxLines: null,
-                          style: const TextStyle(fontSize: 14),
-                          controller: _textMessageController,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Type a message",
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      const Icon(Icons.link),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      _textMessageController.text.isEmpty
-                          ? const Icon(Icons.camera_alt)
-                          : const Text(""),
-                    ],
-                  ),
-                  const SizedBox(
-                    width: 15,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(
-            width: 8,
-          ),
-          InkWell(
-            onTap: () async {
-              if (_textMessageController.text.isNotEmpty) {
-                await ref.read(databaseProvider)!.sendMessage(
-                    widget.chat.chatId,
-                    Message(
-                        text: _textMessageController.text,
-                        myUid: ref.read(firebaseAuthProvider).currentUser!.uid,
-                        time: DateTime.now().toString()));
-                print("'message sent'");
-              }
-            },
-            child: Container(
-              height: 45,
-              width: 45,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: const BorderRadius.all(
-                  Radius.circular(50),
-                ),
-              ),
-              child: const Icon(
-                Icons.send,
-                color: Colors.white,
-              ),
-            ),
-          )
-        ],
       ),
     );
   }
