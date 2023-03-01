@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'pages/select_person_to_chat_page.dart';
 import 'provider.dart';
+import 'screens/list_chat_screen.dart';
 
 class Home extends ConsumerStatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -79,10 +80,7 @@ class _HomeState extends ConsumerState<Home>
           OtherTab(
             tabName: "Camera",
           ),
-          OtherTab(
-            tabName: 'Chats',
-          ),
-          // ListChatScreen(),
+          ListChatScreen(),
           OtherTab(
             tabName: "Status",
           ),
@@ -107,7 +105,6 @@ class _HomeState extends ConsumerState<Home>
   }
 }
 
-// TODO: to implement
 class OtherTab extends StatelessWidget {
   final String tabName;
   const OtherTab({required this.tabName, Key? key}) : super(key: key);
